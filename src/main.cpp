@@ -14,7 +14,6 @@ using namespace vex;
 
 // A global instance of competition
 competition Competition;
-
 // define your global instances of motors and other devices here
 
 /*---------------------------------------------------------------------------*/
@@ -61,6 +60,7 @@ void PID(double target, double timeLimit) {
     if (error == 0) {
      i = 0;
     }
+    
     /*if (time2 >= (timeLimit *1000)) {
       leftDrive.stop(coast);
       rightDrive.stop(coast);
@@ -113,18 +113,36 @@ void clampMacro() {
 
 void usercontrol(void) {
   // User control code here, inside the loop
+  double slow = 1;
+  bool pneumaticsBool = false;
+  bool pressingBool = false;
   while (1) {
+    if (Controller1.ButtonUp.pressing()){
+      slow = 0.4;
+    } else {
+      slow = 1;
+    }
+
     Left.spin(forward, (Controller1.Axis3.position() + Controller1.Axis1.position()) * 0.6, pct);
     Right.spin(forward, (Controller1.Axis3.position() - Controller1.Axis1.position()) * 0.6, pct);
 
-    Controller1.ButtonA.pressed(clampMacro); 
-
-    if(Controller1.ButtonR1.pressing()) {
+    if (Controller1.ButtonR1.pressing()) {
       intake.spin(forward, 100, pct);
-    } else if (Controller1.ButtonR2.pressing()){
-      intake.spin(reverse,100, pct);
+    } else if (Controller1.ButtonR2.pressing()) {
+      intake.spin(reverse, 100, pct);
     } else {
       intake.stop(brake);
+    }
+    
+    if (Controller1.ButtonA.pressing()) {
+      if (pressingBool == false) {
+        pneumaticsBool = !pneumaticsBool;
+        clampPneumatics.set(pneumaticsBool);
+        printToConsole(pneumaticsBool);
+      }
+      pressingBool = true;
+    } else {
+      pressingBool = false;
     }
     // This is the main execution loop for the user control program.
     // Each time through the loop your program should update motor + servo
